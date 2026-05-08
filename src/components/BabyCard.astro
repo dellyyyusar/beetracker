@@ -1,0 +1,38 @@
+---
+import { calculateAge } from '../lib/helpers';
+
+export interface Baby {
+  id: string;
+  name: string;
+  birth_date: string;
+  gender?: string | null;
+  photo_url?: string | null;
+}
+
+interface Props {
+  baby: Baby;
+}
+
+const { baby } = Astro.props;
+const genderIcon = baby.gender === 'male' ? '👶' : '👧';
+---
+
+<a href={`/babies/${baby.id}`} class="card block hover:shadow-md hover:-translate-y-0.5 transition-all">
+  <div class="flex items-center gap-4">
+    <div class="w-16 h-16 rounded-3xl bg-blush flex items-center justify-center text-3xl flex-shrink-0">
+      {baby.photo_url ? (
+        <img src={baby.photo_url} alt={baby.name} class="w-full h-full rounded-3xl object-cover" />
+      ) : (
+        genderIcon
+      )}
+    </div>
+    <div class="flex-1 min-w-0">
+      <h3 class="font-heading font-semibold text-lg text-gray-800 truncate">{baby.name}</h3>
+      <p class="text-sm text-slate-baby">{calculateAge(baby.birth_date)}</p>
+      <p class="text-xs text-gray-400">Lahir {baby.birth_date}</p>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+  </div>
+</a>

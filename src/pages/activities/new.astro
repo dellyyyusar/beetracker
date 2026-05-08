@@ -1,0 +1,238 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { createSupabaseServerClient } from '../../lib/supabase';
+
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+const { data: { user } } = await supabase.auth.getUser();
+
+const { data: babies } = await supabase
+  .from('babies')
+  .select('id, name')
+  .eq('user_id', user!.id);
+
+if (!babies || babies.length === 0) {
+  return Astro.redirect('/babies/new');
+}
+
+const url = new URL(Astro.request.url);
+const selectedType = url.searchParams.get('type') || 'nursing';
+---
+
+<AppLayout title="Catat Aktivitas">
+  <div class="max-w-lg mx-auto space-y-6">
+    <a href="/dashboard" class="text-sm text-slate-baby hover:text-blush flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Kembali
+    </a>
+
+    <h1 class="text-2xl font-heading font-bold text-gray-800">Catat Aktivitas</h1>
+
+    <div class="card">
+      <form id="activityForm" class="space-y-4">
+        <div class="space-y-1">
+          <label for="baby_id" class="block text-sm font-medium text-gray-700">Bayi</label>
+          <select name="baby_id" id="baby_id" required class="input-field">
+            <option value="">-- Pilih Bayi --</option>
+            {babies.map((b: any) => (
+              <option value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label for="type" class="block text-sm font-medium text-gray-700">Jenis Aktivitas</label>
+          <select name="type" id="type" required class="input-field" onchange="toggleFields(this.value)">
+            <option value="nursing" selected={selectedType === 'nursing'}>🍼 Menyusui</option>
+            <option value="formula" selected={selectedType === 'formula'}>🍶 Susu Formula</option>
+            <option value="sleep" selected={selectedType === 'sleep'}>💤 Tidur</option>
+            <option value="diaper" selected={selectedType === 'diaper'}>🚼 Ganti Popok</option>
+            <option value="solid" selected={selectedType === 'solid'}>🥣 MPASI</option>
+            <option value="growth" selected={selectedType === 'growth'}>📏 Pertumbuhan</option>
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label for="started_at" class="block text-sm font-medium text-gray-700">Waktu Mulai</label>
+          <input type="datetime-local" name="started_at" id="started_at" required class="input-field" />
+        </div>
+
+        <!-- Nursing Fields -->
+        <div id="nursing_fields" class="space-y-4">
+          <div class="space-y-1">
+            <label for="nursing_duration" class="block text-sm font-medium text-gray-700">Durasi (menit)</label>
+            <input type="number" name="nursing_duration" id="nursing_duration" min="1" max="120" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="nursing_side" class="block text-sm font-medium text-gray-700">Sisi</label>
+            <select name="nursing_side" id="nursing_side" class="input-field">
+              <option value="left">Kiri</option>
+              <option value="right">Kanan</option>
+              <option value="both">Keduanya</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Formula Fields -->
+        <div id="formula_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="formula_volume" class="block text-sm font-medium text-gray-700">Volume (ml)</label>
+            <input type="number" name="formula_volume" id="formula_volume" min="1" max="500" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Sleep Fields -->
+        <div id="sleep_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="ended_at" class="block text-sm font-medium text-gray-700">Waktu Bangun</label>
+            <input type="datetime-local" name="ended_at" id="ended_at" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Diaper Fields -->
+        <div id="diaper_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="diaper_type" class="block text-sm font-medium text-gray-700">Jenis</label>
+            <select name="diaper_type" id="diaper_type" class="input-field">
+              <option value="wet">Pipis 💦</option>
+              <option value="dirty">Pup 💩</option>
+              <option value="both">Keduanya 💦💩</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label for="diaper_color" class="block text-sm font-medium text-gray-700">Warna (opsional)</label>
+            <input type="text" name="diaper_color" id="diaper_color" placeholder="Cth: kuning, hijau" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Solid Fields -->
+        <div id="solid_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="solid_food" class="block text-sm font-medium text-gray-700">Jenis Makanan</label>
+            <input type="text" name="solid_food" id="solid_food" placeholder="Cth: bubur ayam, puree labu" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="solid_portion" class="block text-sm font-medium text-gray-700">Porsi</label>
+            <input type="number" name="solid_portion" id="solid_portion" min="1" step="0.5" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="solid_unit" class="block text-sm font-medium text-gray-700">Satuan</label>
+            <select name="solid_unit" id="solid_unit" class="input-field">
+              <option value="sendok">Sendok</option>
+              <option value="gram">Gram</option>
+              <option value="pcs">Potong</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Growth Fields -->
+        <div id="growth_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="growth_weight" class="block text-sm font-medium text-gray-700">Berat Badan (kg)</label>
+            <input type="number" name="growth_weight" id="growth_weight" min="0.1" step="0.1" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="growth_height" class="block text-sm font-medium text-gray-700">Tinggi (cm)</label>
+            <input type="number" name="growth_height" id="growth_height" min="1" step="0.5" class="input-field" />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label for="notes" class="block text-sm font-medium text-gray-700">Catatan (opsional)</label>
+          <textarea name="notes" id="notes" rows="2" class="input-field" placeholder="Catatan tambahan..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary w-full">Simpan</button>
+        <p id="error" class="text-sm text-red-500 text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function toggleFields(type) {
+      const fields: Record<string, string> = {
+        nursing: 'nursing_fields',
+        formula: 'formula_fields',
+        sleep: 'sleep_fields',
+        diaper: 'diaper_fields',
+        solid: 'solid_fields',
+        growth: 'growth_fields',
+      };
+
+      Object.entries(fields).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', key !== type);
+      });
+    }
+
+    toggleFields((document.getElementById('type') as HTMLSelectElement)?.value || 'nursing');
+
+    document.getElementById('activityForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const errorEl = document.getElementById('error')!;
+      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan...';
+      errorEl.classList.add('hidden');
+
+      const type = (form.elements.namedItem('type') as HTMLSelectElement).value;
+      const metadata: Record<string, any> = {};
+
+      if (type === 'nursing') {
+        metadata.duration = parseInt((document.getElementById('nursing_duration') as HTMLInputElement).value) || null;
+        metadata.side = (document.getElementById('nursing_side') as HTMLSelectElement).value;
+      } else if (type === 'formula') {
+        metadata.volume = parseInt((document.getElementById('formula_volume') as HTMLInputElement).value) || null;
+      } else if (type === 'sleep') {
+        // ended_at handled separately
+      } else if (type === 'diaper') {
+        metadata.diaper_type = (document.getElementById('diaper_type') as HTMLSelectElement).value;
+        metadata.color = (document.getElementById('diaper_color') as HTMLInputElement).value || null;
+      } else if (type === 'solid') {
+        metadata.food = (document.getElementById('solid_food') as HTMLInputElement).value || null;
+        metadata.portion = parseFloat((document.getElementById('solid_portion') as HTMLInputElement).value) || null;
+        metadata.portion_unit = (document.getElementById('solid_unit') as HTMLSelectElement).value;
+      } else if (type === 'growth') {
+        metadata.weight = parseFloat((document.getElementById('growth_weight') as HTMLInputElement).value) || null;
+        metadata.height = parseFloat((document.getElementById('growth_height') as HTMLInputElement).value) || null;
+      }
+
+      const body: Record<string, any> = {
+        baby_id: (form.elements.namedItem('baby_id') as HTMLSelectElement).value,
+        type,
+        started_at: new Date((form.elements.namedItem('started_at') as HTMLInputElement).value).toISOString(),
+        metadata,
+        notes: (form.elements.namedItem('notes') as HTMLTextAreaElement).value || null,
+      };
+
+      if (type === 'sleep') {
+        const endedAt = (document.getElementById('ended_at') as HTMLInputElement).value;
+        if (endedAt) body.ended_at = new Date(endedAt).toISOString();
+      }
+
+      try {
+        const res = await fetch('/api/activities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Gagal menyimpan');
+        }
+
+        window.location.href = '/dashboard';
+      } catch (err: any) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Simpan';
+      }
+    });
+  </script>
+</AppLayout>

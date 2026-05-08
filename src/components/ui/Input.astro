@@ -1,0 +1,28 @@
+---
+export interface Props {
+  type?: string;
+  name: string;
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  class?: string;
+  label?: string;
+  error?: string;
+}
+
+const { type = 'text', name, value, placeholder, required, class: className = '', label, error } = Astro.props;
+---
+
+<div class="space-y-1">
+  {label && <label for={name} class="block text-sm font-medium text-gray-700">{label}</label>}
+  <input
+    {type}
+    {name}
+    {value}
+    {placeholder}
+    {required}
+    class={`input-field ${className} ${error ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : ''}`}
+    id={name}
+  />
+  {error && <p class="text-xs text-red-500 mt-1">{error}</p>}
+</div>

@@ -1,0 +1,257 @@
+---
+import type { Baby } from './BabyCard.astro';
+
+interface Props {
+  babies: Baby[];
+  selectedBabyId?: string;
+}
+const { babies, selectedBabyId } = Astro.props;
+---
+
+<!-- Trigger button -->
+
+<!-- Modal backdrop + panel -->
+<div id="activity-modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40" id="modal-backdrop"></div>
+  <div class="absolute inset-0 flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-xl max-h-[90vh] overflow-y-auto p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-heading font-bold text-gray-800">Catat Aktivitas</h3>
+        <button id="modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="modalActivityForm" class="space-y-4">
+        <div class="space-y-1">
+          <label for="modal_baby_id" class="block text-sm font-medium text-gray-700">Bayi</label>
+          <select name="baby_id" id="modal_baby_id" required class="input-field">
+            <option value="">-- Pilih Bayi --</option>
+            {babies.map((baby) => (
+              <option value={baby.id} selected={baby.id === selectedBabyId}>{baby.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label for="modal_type" class="block text-sm font-medium text-gray-700">Jenis Aktivitas</label>
+          <select name="type" id="modal_type" required class="input-field" onchange="modalToggleFields(this.value)">
+            <option value="nursing">🍼 Menyusui</option>
+            <option value="formula">🍶 Susu Formula</option>
+            <option value="sleep">💤 Tidur</option>
+            <option value="diaper">🚼 Ganti Popok</option>
+            <option value="solid">🥣 MPASI</option>
+            <option value="growth">📏 Pertumbuhan</option>
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label for="modal_started_at" class="block text-sm font-medium text-gray-700">Waktu Mulai</label>
+          <input type="datetime-local" name="started_at" id="modal_started_at" required class="input-field" />
+        </div>
+
+        <!-- Nursing Fields -->
+        <!-- <div id="modal_nursing_fields" class="space-y-4">
+          <div class="space-y-1">
+            <label for="modal_nursing_duration" class="block text-sm font-medium text-gray-700">Durasi (menit)</label>
+            <input type="number" name="nursing_duration" id="modal_nursing_duration" min="1" max="120" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="modal_nursing_side" class="block text-sm font-medium text-gray-700">Sisi</label>
+            <select name="nursing_side" id="modal_nursing_side" class="input-field">
+              <option value="left">Kiri</option>
+              <option value="right">Kanan</option>
+              <option value="both">Keduanya</option>
+            </select>
+          </div>
+        </div> -->
+
+        <!-- Formula Fields -->
+        <div id="modal_formula_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="modal_formula_volume" class="block text-sm font-medium text-gray-700">Volume (ml)</label>
+            <input type="number" name="formula_volume" id="modal_formula_volume" min="1" max="500" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Sleep Fields -->
+        <div id="modal_sleep_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="modal_ended_at" class="block text-sm font-medium text-gray-700">Waktu Bangun</label>
+            <input type="datetime-local" name="ended_at" id="modal_ended_at" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Diaper Fields -->
+        <div id="modal_diaper_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="modal_diaper_type" class="block text-sm font-medium text-gray-700">Jenis</label>
+            <select name="diaper_type" id="modal_diaper_type" class="input-field">
+              <option value="wet">Pipis 💦</option>
+              <option value="dirty">Pup 💩</option>
+              <option value="both">Keduanya 💦💩</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label for="modal_diaper_color" class="block text-sm font-medium text-gray-700">Warna (opsional)</label>
+            <input type="text" name="diaper_color" id="modal_diaper_color" placeholder="Cth: kuning, hijau" class="input-field" />
+          </div>
+        </div>
+
+        <!-- Solid Fields -->
+        <div id="modal_solid_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="modal_solid_food" class="block text-sm font-medium text-gray-700">Jenis Makanan</label>
+            <input type="text" name="solid_food" id="modal_solid_food" placeholder="Cth: bubur ayam, puree labu" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="modal_solid_portion" class="block text-sm font-medium text-gray-700">Porsi</label>
+            <input type="number" name="solid_portion" id="modal_solid_portion" min="1" step="0.5" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="modal_solid_unit" class="block text-sm font-medium text-gray-700">Satuan</label>
+            <select name="solid_unit" id="modal_solid_unit" class="input-field">
+              <option value="sendok">Sendok</option>
+              <option value="gram">Gram</option>
+              <option value="pcs">Potong</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Growth Fields -->
+        <div id="modal_growth_fields" class="space-y-4 hidden">
+          <div class="space-y-1">
+            <label for="modal_growth_weight" class="block text-sm font-medium text-gray-700">Berat Badan (kg)</label>
+            <input type="number" name="growth_weight" id="modal_growth_weight" min="0.1" step="0.1" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="modal_growth_height" class="block text-sm font-medium text-gray-700">Tinggi (cm)</label>
+            <input type="number" name="growth_height" id="modal_growth_height" min="1" step="0.5" class="input-field" />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label for="modal_notes" class="block text-sm font-medium text-gray-700">Catatan (opsional)</label>
+          <textarea name="notes" id="modal_notes" rows="2" class="input-field" placeholder="Catatan tambahan..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary w-full">Simpan</button>
+        <p id="modal_error" class="text-sm text-red-500 text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function modalToggleFields(type) {
+    const fields = {
+      nursing: 'modal_nursing_fields',
+      formula: 'modal_formula_fields',
+      sleep: 'modal_sleep_fields',
+      diaper: 'modal_diaper_fields',
+      solid: 'modal_solid_fields',
+      growth: 'modal_growth_fields',
+    };
+    Object.entries(fields).forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden', key !== type);
+    });
+  }
+
+  function openActivityModal(preselectedType) {
+    const modal = document.getElementById('activity-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    const typeSelect = document.getElementById('modal_type');
+    if (preselectedType) {
+      typeSelect.value = preselectedType;
+    }
+    modalToggleFields(typeSelect.value);
+
+    const now = new Date();
+    const localStr = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0') + 'T' +
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('modal_started_at').value = localStr;
+  }
+
+  function closeActivityModal() {
+    const modal = document.getElementById('activity-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('modal-close')?.addEventListener('click', closeActivityModal);
+    document.getElementById('modal-backdrop')?.addEventListener('click', closeActivityModal);
+
+    document.getElementById('modalActivityForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const errorEl = document.getElementById('modal_error');
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan...';
+      errorEl.classList.add('hidden');
+
+      const type = document.getElementById('modal_type').value;
+      const metadata = {};
+
+      if (type === 'nursing') {
+        metadata.duration = parseInt(document.getElementById('modal_nursing_duration').value) || null;
+        metadata.side = document.getElementById('modal_nursing_side').value;
+      } else if (type === 'formula') {
+        metadata.volume = parseInt(document.getElementById('modal_formula_volume').value) || null;
+      } else if (type === 'diaper') {
+        metadata.diaper_type = document.getElementById('modal_diaper_type').value;
+        metadata.color = document.getElementById('modal_diaper_color').value || null;
+      } else if (type === 'solid') {
+        metadata.food = document.getElementById('modal_solid_food').value || null;
+        metadata.portion = parseFloat(document.getElementById('modal_solid_portion').value) || null;
+        metadata.portion_unit = document.getElementById('modal_solid_unit').value;
+      } else if (type === 'growth') {
+        metadata.weight = parseFloat(document.getElementById('modal_growth_weight').value) || null;
+        metadata.height = parseFloat(document.getElementById('modal_growth_height').value) || null;
+      }
+
+      const body = {
+        baby_id: document.getElementById('modal_baby_id').value,
+        type,
+        started_at: new Date(document.getElementById('modal_started_at').value).toISOString(),
+        metadata,
+        notes: document.getElementById('modal_notes').value || null,
+      };
+
+      if (type === 'sleep') {
+        const endedAt = document.getElementById('modal_ended_at').value;
+        if (endedAt) body.ended_at = new Date(endedAt).toISOString();
+      }
+
+      try {
+        const res = await fetch('/api/activities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Gagal menyimpan');
+        }
+
+        closeActivityModal();
+        window.location.reload();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Simpan';
+      }
+    });
+  });
+
+  window.openActivityModal = openActivityModal;
+  window.closeActivityModal = closeActivityModal;
+</script>

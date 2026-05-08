@@ -1,0 +1,73 @@
+---
+import { getActivityLabel, getActivityIcon, getActivityColor, formatTime } from '../lib/helpers';
+
+export interface Activity {
+  id: string;
+  baby_id: string;
+  type: string;
+  started_at: string;
+  ended_at?: string | null;
+  notes?: string | null;
+  metadata?: Record<string, any> | null;
+  babies?: { name: string } | null;
+}
+
+interface Props {
+  activity: Activity;
+}
+
+const { activity } = Astro.props;
+const meta = activity.metadata || {};
+---
+
+<div class="card flex items-start gap-4 hover:shadow-md transition-shadow">
+  <div class={`w-12 h-12 rounded-2xl ${getActivityColor(activity.type)} flex items-center justify-center text-2xl flex-shrink-0`}>
+    {getActivityIcon(activity.type)}
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center justify-between gap-2">
+      <h3 class="font-heading font-semibold text-gray-800">
+        {getActivityLabel(activity.type)}
+      </h3>
+      <span class="text-xs text-gray-400 whitespace-nowrap">{formatTime(activity.started_at)}</span>
+    </div>
+    <div class="mt-1 flex flex-wrap gap-2">
+      {activity.type === 'nursing' && (
+        <>
+          {meta.duration && <span class="text-sm text-slate-baby">⏱ {meta.duration} mnt</span>}
+          {meta.side && <span class="text-sm text-slate-baby">{meta.side === 'left' ? '⬅️' : meta.side === 'right' ? '➡️' : '↔️'} {meta.side}</span>}
+        </>
+      )}
+      {activity.type === 'formula' && meta.volume && (
+        <span class="text-sm text-slate-baby">🍶 {meta.volume} ml</span>
+      )}
+      {activity.type === 'sleep' && (
+        <>
+          {activity.ended_at && <span class="text-sm text-slate-baby">⏰ {formatTime(activity.ended_at)}</span>}
+        </>
+      )}
+      {activity.type === 'diaper' && (
+        <>
+          <span class="text-sm text-slate-baby">{meta.diaper_type === 'wet' ? '💦 Pipis' : meta.diaper_type === 'dirty' ? '💩 Pup' : '💦💩 Keduanya'}</span>
+          {meta.color && <span class="text-sm text-slate-baby">🎨 {meta.color}</span>}
+        </>
+      )}
+      {activity.type === 'solid' && (
+        <>
+          {meta.food && <span class="text-sm text-slate-baby">🍲 {meta.food}</span>}
+          {meta.portion && <span class="text-sm text-slate-baby">📊 {meta.portion} {meta.portion_unit || 'sendok'}</span>}
+        </>
+      )}
+      {activity.type === 'growth' && (
+        <>
+          {meta.weight && <span class="text-sm text-slate-baby">⚖️ {meta.weight} kg</span>}
+          {meta.height && <span class="text-sm text-slate-baby">📏 {meta.height} cm</span>}
+        </>
+      )}
+      {activity.babies && <span class="text-xs text-gray-400 ml-auto">👶 {activity.babies.name}</span>}
+    </div>
+    {activity.notes && (
+      <p class="mt-2 text-sm text-gray-500">{activity.notes}</p>
+    )}
+  </div>
+</div>

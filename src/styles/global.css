@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body bg-cream text-gray-800 antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blush text-gray-800 font-semibold px-6 py-3 rounded-2xl 
+           hover:bg-blush/80 transition-all duration-200 
+           shadow-sm hover:shadow-md active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-slate-baby font-semibold px-6 py-3 rounded-2xl 
+           border border-slate-baby/20 hover:bg-cream 
+           transition-all duration-200 shadow-sm hover:shadow-md active:scale-95;
+  }
+
+  .btn-danger {
+    @apply bg-red-400 text-white font-semibold px-6 py-3 rounded-2xl 
+           hover:bg-red-500 transition-all duration-200 
+           shadow-sm hover:shadow-md active:scale-95;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl shadow-sm border border-gray-100 p-6;
+  }
+
+  .input-field {
+    @apply w-full rounded-2xl border-gray-200 bg-cream/50 
+           focus:border-blush focus:ring focus:ring-blush/20 
+           transition-all duration-200 placeholder:text-gray-400;
+  }
+}

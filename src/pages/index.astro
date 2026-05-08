@@ -1,17 +1,42 @@
 ---
-
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Selamat Datang">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full text-center">
+      <div class="text-7xl mb-6">🐝</div>
+      <h1 class="text-4xl font-heading font-bold text-gray-800 mb-2">BeeTracker</h1>
+      <p class="text-lg text-slate-baby mb-8">Lacak setiap momen berharga pertumbuhan si kecil</p>
+
+      <div class="space-y-4 mb-12">
+        <div class="card flex items-center gap-4 text-left">
+          <div class="text-3xl">🍼</div>
+          <div>
+            <h3 class="font-semibold">Catat Aktivitas</h3>
+            <p class="text-sm text-slate-baby">Menyusui, tidur, popok, dan lainnya</p>
+          </div>
+        </div>
+        <div class="card flex items-center gap-4 text-left">
+          <div class="text-3xl">📊</div>
+          <div>
+            <h3 class="font-semibold">Pantau Pertumbuhan</h3>
+            <p class="text-sm text-slate-baby">Berat badan, tinggi, dan perkembangan</p>
+          </div>
+        </div>
+        <div class="card flex items-center gap-4 text-left">
+          <div class="text-3xl">👨‍👩‍👧‍👦</div>
+          <div>
+            <h3 class="font-semibold">Multi-Profil</h3>
+            <p class="text-sm text-slate-baby">Pantau lebih dari satu bayi sekaligus</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <a href="/register" class="btn-primary block text-center">Mulai Sekarang</a>
+        <a href="/login" class="btn-secondary block text-center">Sudah punya akun? Masuk</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

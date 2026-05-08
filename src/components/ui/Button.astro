@@ -1,0 +1,20 @@
+---
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'danger';
+  type?: 'submit' | 'button' | 'reset';
+  class?: string;
+  disabled?: boolean;
+}
+
+const { variant = 'primary', type = 'submit', class: className = '', disabled = false } = Astro.props;
+
+const variants: Record<string, string> = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  danger: 'btn-danger',
+};
+---
+
+<button type={type} class={`${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`} {disabled}>
+  <slot />
+</button>

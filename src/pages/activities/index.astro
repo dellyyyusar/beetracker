@@ -1,0 +1,109 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import ActivityCard from '../../components/ActivityCard.astro';
+import QuickLog from '../../components/QuickLog.astro';
+import { createSupabaseServerClient } from '../../lib/supabase';
+
+const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+const { data: { user } } = await supabase.auth.getUser();
+
+const url = new URL(Astro.request.url);
+const filterType = url.searchParams.get('type');
+const filterBaby = url.searchParams.get('baby_id');
+const page = parseInt(url.searchParams.get('page') || '1', 10);
+const limit = 20;
+const offset = (page - 1) * limit;
+
+const { data: babies } = await supabase
+  .from('babies')
+  .select('id, name')
+  .eq('user_id', user!.id);
+
+let query = supabase
+  .from('activities')
+  .select('*, babies(name)', { count: 'exact' })
+  .eq('user_id', user!.id)
+  .order('started_at', { ascending: false })
+  .range(offset, offset + limit - 1);
+
+if (filterType) query = query.eq('type', filterType);
+if (filterBaby) query = query.eq('baby_id', filterBaby);
+
+const { data: activities, count } = await query;
+const totalPages = count ? Math.ceil(count / limit) : 1;
+
+const activityTypes = [
+  { value: '', label: 'Semua' },
+  { value: 'nursing', label: '🍼 Menyusui' },
+  { value: 'formula', label: '🍶 Formula' },
+  { value: 'sleep', label: '💤 Tidur' },
+  { value: 'diaper', label: '🚼 Popok' },
+  { value: 'solid', label: '🥣 MPASI' },
+  { value: 'growth', label: '📏 Pertumbuhan' },
+];
+---
+
+<AppLayout title="Riwayat Aktivitas">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <h1 class="text-2xl font-heading font-bold text-gray-800">Riwayat Aktivitas</h1>
+
+    <!-- Filters -->
+    <div class="card">
+      <form class="flex flex-col sm:flex-row gap-3" method="GET">
+        <div class="flex-1">
+          <select name="type" class="input-field" onchange="this.form.submit()">
+            {activityTypes.map(t => (
+              <option value={t.value} selected={t.value === filterType}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div class="flex-1">
+          <select name="baby_id" class="input-field" onchange="this.form.submit()">
+            <option value="">Semua Bayi</option>
+            {babies?.map((b: any) => (
+              <option value={b.id} selected={b.id === filterBaby}>{b.name}</option>
+            ))}
+          </select>
+        </div>
+        {(filterType || filterBaby) && (
+          <a href="/activities" class="btn-secondary text-sm flex items-center">Reset</a>
+        )}
+      </form>
+    </div>
+
+    <!-- Activity List -->
+    <div class="space-y-3">
+      {activities && activities.length > 0 ? (
+        activities.map((activity: any) => (
+          <ActivityCard activity={activity} />
+        ))
+      ) : (
+        <div class="card text-center py-12">
+          <div class="text-5xl mb-4">📝</div>
+          <p class="text-slate-baby">Belum ada aktivitas</p>
+          <button onclick="openActivityModal()" class="btn-primary inline-block mt-4 cursor-pointer">Catat Aktivitas</button>
+        </div>
+      )}
+    </div>
+
+    <!-- Pagination -->
+    {totalPages > 1 && (
+      <div class="flex items-center justify-center gap-2">
+        {page > 1 && (
+          <a href={`?page=${page - 1}${filterType ? `&type=${filterType}` : ''}${filterBaby ? `&baby_id=${filterBaby}` : ''}`}
+             class="btn-secondary text-sm">
+            Sebelumnya
+          </a>
+        )}
+        <span class="text-sm text-slate-baby">Halaman {page} dari {totalPages}</span>
+        {page < totalPages && (
+          <a href={`?page=${page + 1}${filterType ? `&type=${filterType}` : ''}${filterBaby ? `&baby_id=${filterBaby}` : ''}`}
+             class="btn-secondary text-sm">
+            Selanjutnya
+          </a>
+        )}
+      </div>
+    )}
+  </div>
+  <QuickLog babies={babies ?? []} selectedBabyId={babies?.[0]?.id} />
+</AppLayout>
