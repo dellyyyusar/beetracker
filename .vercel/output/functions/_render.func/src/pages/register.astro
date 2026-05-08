@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Daftar">
+  <div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-sm w-full">
+      <div class="text-center mb-8">
+        <a href="/" class="text-4xl">🐝</a>
+        <h1 class="text-2xl font-heading font-bold text-gray-800 mt-2">Daftar Akun</h1>
+        <p class="text-sm text-slate-baby">Mulai lacak aktivitas si kecil</p>
+      </div>
+
+      <div class="card">
+        <form id="registerForm" class="space-y-4">
+          <div class="space-y-1">
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" name="email" id="email" required placeholder="nama@email.com" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input type="password" name="password" id="password" required placeholder="Min. 6 karakter" minlength="6" class="input-field" />
+          </div>
+          <div class="space-y-1">
+            <label for="confirm_password" class="block text-sm font-medium text-gray-700">Konfirmasi Password</label>
+            <input type="password" name="confirm_password" id="confirm_password" required placeholder="Ulangi password" minlength="6" class="input-field" />
+          </div>
+          <button type="submit" class="btn-primary w-full">Daftar</button>
+          <p id="error" class="text-sm text-red-500 text-center hidden"></p>
+        </form>
+        <p class="text-center text-sm text-slate-baby mt-4">
+          Sudah punya akun? <a href="/login" class="text-blush font-semibold hover:underline">Masuk</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const errorEl = document.getElementById('error')!;
+      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+      const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+      const confirm = (form.elements.namedItem('confirm_password') as HTMLInputElement).value;
+
+      if (password !== confirm) {
+        errorEl.textContent = 'Password tidak cocok';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Memproses...';
+      errorEl.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: (form.elements.namedItem('email') as HTMLInputElement).value,
+            password,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Registrasi gagal');
+        }
+
+        window.location.href = '/dashboard';
+      } catch (err: any) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Daftar';
+      }
+    });
+  </script>
+</BaseLayout>
